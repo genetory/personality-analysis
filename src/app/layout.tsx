@@ -2,15 +2,20 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navigation from "@/components/Navigation";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap", // 폰트 로딩 최적화
+  preload: true,
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap", // 폰트 로딩 최적화
+  preload: true,
 });
 
 export const metadata: Metadata = {
@@ -28,10 +33,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Navigation />
-        <main className="min-h-screen max-w-[700px] mx-auto">
+        <ConditionalLayout>
           {children}
-        </main>
+        </ConditionalLayout>
       </body>
     </html>
   );
