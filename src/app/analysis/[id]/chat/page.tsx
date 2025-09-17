@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import AIChat from '@/components/AIChat';
-import GeneralAnalysisChat from '@/components/GeneralAnalysisChat';
+import QuestionChat from '@/components/QuestionChat';
 import { useRouter } from 'next/navigation';
 
 type AnalysisState = 'chat' | 'result';
@@ -14,14 +13,14 @@ export default function AnalysisChatPage() {
   const [state, setState] = useState<AnalysisState>('chat');
 
   const handleAnalysisComplete = (result: any) => {
-    // 기존 결과 페이지로 리다이렉트
-    router.push(`/analysis/${params.id}/result?session=${result.session_id}&gender=${result.gender}`);
+    // 결과 페이지로 리다이렉트 (임시로 메인 페이지로)
+    router.push('/');
   };
 
   return (
     <div className="h-screen">
-      <GeneralAnalysisChat
-        analysisId={params.id as string} // 분석 ID 그대로 사용
+      <QuestionChat
+        analysisId={params.id as string}
         onComplete={handleAnalysisComplete}
       />
     </div>

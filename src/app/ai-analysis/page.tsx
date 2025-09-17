@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Sparkles, Brain, Zap } from 'lucide-react';
-import AIChat from '@/components/AIChat';
+import QuestionChat from '@/components/QuestionChat';
 import AIResult from '@/components/AIResult';
 
 type AnalysisState = 'intro' | 'chat' | 'result';
@@ -29,7 +29,7 @@ export default function AIAnalysisPage() {
     };
   }, [state]);
 
-  const handleStartAnalysis = (analysisType: string = 'ai-egen-analysis') => {
+  const handleStartAnalysis = (analysisType: string = '550e8400-e29b-41d4-a716-446655440001') => {
     setSelectedAnalysisType(analysisType);
     setState('chat');
   };
@@ -56,7 +56,7 @@ export default function AIAnalysisPage() {
   if (state === 'chat') {
     return (
       <div className="h-screen bg-white overflow-hidden">
-        <AIChat
+        <QuestionChat
           analysisId={selectedAnalysisType}
           onComplete={handleAnalysisComplete}
         />
@@ -86,12 +86,12 @@ export default function AIAnalysisPage() {
                 <Sparkles className="w-10 h-10 text-white" />
               </div>
               <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                AI 성향 분석
+                4축 성향 분석
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                AI가 당신만을 위한 맞춤 질문을 생성하고, 
+                과학적 근거에 기반한 4축 성향분석으로 
                 <br />
-                답변 패턴을 분석하여 정확한 성향을 진단합니다
+                당신의 진짜 성향을 정확하게 파악해보세요
               </p>
             </div>
 
@@ -102,10 +102,10 @@ export default function AIAnalysisPage() {
                   <Brain className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  개인화된 질문
+                  과학적 근거
                 </h3>
                 <p className="text-gray-600">
-                  이전 답변을 분석하여 다음 질문이 동적으로 생성됩니다
+                  4개 축으로 구성된 검증된 성향분석 모델을 사용합니다
                 </p>
               </div>
 
@@ -129,51 +129,29 @@ export default function AIAnalysisPage() {
                   정확한 진단
                 </h3>
                 <p className="text-gray-600">
-                  AI가 답변 패턴을 분석하여 높은 정확도로 성향을 진단합니다
+                  16개 질문으로 4개 축의 성향을 정확하게 분석합니다
                 </p>
               </div>
             </div>
 
-            {/* 분석 유형 선택 */}
+            {/* 분석 시작 버튼 */}
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-                분석 유형을 선택해주세요
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                <Link
-                  href="/analysis/egen-teto"
-                  className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-purple-200 block"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    에겐/테토 성향 분석
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    MZ 세대를 위한 16가지 성향 분석
-                  </p>
-                </Link>
-                
-                <Link
-                  href="/analysis/bdsm"
-                  className="p-6 bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-transparent hover:border-pink-200 block"
-                >
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    BDSM 성향 분석
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    파트너와의 관계에서의 성향 분석
-                  </p>
-                </Link>
-              </div>
+              <button
+                onClick={() => handleStartAnalysis()}
+                className="px-8 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                4축 성향분석 시작하기
+              </button>
             </div>
 
 
             {/* 안내 텍스트 */}
             <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-700">
-                💡 <strong>안내:</strong> 분석은 정확히 12개의 질문으로 구성되며, 
-                각 질문은 이전 답변을 바탕으로 개인화됩니다.
+                💡 <strong>안내:</strong> 4축 성향분석은 16개의 질문으로 구성되며, 
+                에겐/테토, 액티브/리플렉트, 플랜/플로우, 표현/절제 4개 축으로 분석합니다.
                 <br />
-                예상 소요 시간: 3-5분
+                예상 소요 시간: 5-7분
               </p>
             </div>
           </div>
