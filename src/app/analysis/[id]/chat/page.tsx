@@ -1,20 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import QuestionChat from '@/components/QuestionChat';
 import { useRouter } from 'next/navigation';
 
-type AnalysisState = 'chat' | 'result';
+interface AnalysisResult {
+  analysisId: string;
+  gender: 'male' | 'female';
+  answers: any[];
+  scores: any;
+  personalityResult: any;
+  completedAt: string;
+}
 
 export default function AnalysisChatPage() {
   const params = useParams();
   const router = useRouter();
-  const [state, setState] = useState<AnalysisState>('chat');
 
-  const handleAnalysisComplete = (result: any) => {
-    // 결과 페이지로 리다이렉트 (임시로 메인 페이지로)
-    router.push('/');
+  const handleAnalysisComplete = (analysisResult: AnalysisResult) => {
+    // 결과를 세션에 저장
+    sessionStorage.setItem('analysisResult', JSON.stringify(analysisResult));
+    
+    // 상세 결과 페이지로 이동
+    const resultData = encodeURIComponent(JSON.stringify(analysisResult.personalityResult));
+    router.push(`/analysis/${params.id}/detailed-result?result=${resultData}`);
   };
 
   return (
