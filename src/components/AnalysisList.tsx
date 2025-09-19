@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState, useEffect } from 'react';
 import { CommonSectionTitle } from '@/components/common';
 
@@ -16,9 +17,10 @@ interface Analysis {
   updated_at: string;
 }
 
-export default function PopularAnalysisSection() {
+export default function AnalysisList() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchAnalyses = async () => {
@@ -54,6 +56,10 @@ export default function PopularAnalysisSection() {
     }
   };
 
+  const handleImageError = (analysisId: string) => {
+    setImageErrors(prev => new Set(prev).add(analysisId));
+  };
+
   return (
     <div className="w-full px-4 py-16">
       <div className="max-w-[700px] mx-auto">
@@ -87,17 +93,19 @@ export default function PopularAnalysisSection() {
               return (
                 <Link
                   key={analysis.id}
-                  href={`/analysis/${analysis.id}/chat`}
+                  href={`/analysis/${analysis.id}`}
                   className="group block"
                 >
                   <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-gray-200 flex flex-col h-80">
                     {/* Image */}
                     <div className="relative h-44 bg-gradient-to-br from-gray-100 to-gray-200">
-                      {analysis.thumb_image_url ? (
-                        <img 
+                      {analysis.thumb_image_url && !imageErrors.has(analysis.id) ? (
+                        <Image 
                           src={analysis.thumb_image_url} 
                           alt={analysis.name}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          onError={() => handleImageError(analysis.id)}
                         />
                       ) : (
                         <>

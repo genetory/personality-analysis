@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Send, Bot, User, Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -10,7 +9,7 @@ interface Question {
   category: string;
   axis: string;
   order_index: number;
-  question_options: QuestionOption[];
+  options: QuestionOption[];
 }
 
 interface QuestionOption {
@@ -35,43 +34,37 @@ interface Message {
 }
 
 interface PersonalityResult {
-  type: string; // 예: "에겐남", "테토녀" 등
-  summary: {
-    catchphrase: string;
-    keywords: string[];
-  };
+  type_name: string; // 예: "에겐남-라이트", "테토녀-하드코어" 등
+  type_title: string;
+  type_description: string;
+  keywords: string[];
   strengths: string[];
   weaknesses: string[];
   relationships: string;
-  workStyle: string;
-  stressResponse: string;
-  growthTips: string[];
-  compatibility: {
-    best: {
-      type: string;
-      reason: string;
-    };
-    worst: {
-      type: string;
-      reason: string;
-    };
-  };
+  work_style: string;
+  stress_response: string;
+  growth_tips: string[];
+  compatibility_best_type: string;
+  compatibility_best_type_title: string;
+  compatibility_best_reason: string;
+  compatibility_worst_type: string;
+  compatibility_worst_type_title: string;
+  compatibility_worst_reason: string;
+  point: string;
 }
 
-interface QuestionChatProps {
+interface AnalysisChatProps {
   analysisId: string;
-  onComplete: (result: any) => void;
+  onComplete: (result: unknown) => void;
 }
 
-export default function QuestionChat({ analysisId, onComplete }: QuestionChatProps) {
-  const router = useRouter();
+export default function AnalysisChat({ analysisId, onComplete }: AnalysisChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ questionId: string; optionId: string; value: number; axisScore: number }[]>([]);
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
-  const [analysisInfo, setAnalysisInfo] = useState<{name: string, description: string} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -111,7 +104,6 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
         description: analysisData.description
       };
       
-      setAnalysisInfo(analysisInfo);
       setQuestions(questionsData);
       
       // 첫 번째 질문으로 시작 (analysisInfo를 직접 전달)
@@ -238,8 +230,8 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
               content: firstQuestion.text,
               timestamp: new Date(),
               options: {
-                option1: firstQuestion.question_options[0]?.text || '',
-                option2: firstQuestion.question_options[1]?.text || ''
+                option1: firstQuestion.options[0]?.text || '',
+                option2: firstQuestion.options[1]?.text || ''
               }
             };
             
@@ -260,8 +252,8 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
       return;
     }
 
-    // 분석 완료 후 결과 메시지의 버튼 처리 (테스트를 위해 1개 질문 후 완료)
-    if (currentQuestionIndex >= 1) {
+    // 분석 완료 후 결과 메시지의 버튼 처리
+    if (currentQuestionIndex >= questions.length) {
       console.log('Analysis complete, handling result action buttons');
       const lastMessage = messages[messages.length - 1];
       if (lastMessage && lastMessage.options) {
@@ -288,7 +280,7 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
 
     // 일반 질문 처리
     const currentQuestion = questions[currentQuestionIndex];
-    const selectedOption = currentQuestion.question_options[optionIndex];
+    const selectedOption = currentQuestion.options[optionIndex];
     
     if (!selectedOption) return;
 
@@ -318,9 +310,12 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
     
     console.log('Processing next question:', { nextIndex, questionsLength: questions.length });
 
-    // 테스트를 위해 1개 질문만 표시 후 바로 분석 완료
-    if (nextIndex < 1 && nextIndex < questions.length) {
+    // 다음 질문이 있으면 계속 진행, 없으면 분석 완료
+    if (nextIndex < questions.length) {
       console.log('Showing next question');
+      // 기존 타이핑 메시지 제거
+      setMessages(prev => prev.filter(msg => !msg.isTyping));
+      
       // 타이핑 인디케이터 표시
       const typingMessage: Message = {
         id: `typing-next-${Date.now()}`,
@@ -341,8 +336,8 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
           content: nextQuestion.text,
           timestamp: new Date(),
           options: {
-            option1: nextQuestion.question_options[0]?.text || '',
-            option2: nextQuestion.question_options[1]?.text || ''
+            option1: nextQuestion.options[0]?.text || '',
+            option2: nextQuestion.options[1]?.text || ''
           }
         };
         
@@ -350,6 +345,9 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
       }, 300);
     } else {
       console.log('Analysis complete, starting completion process');
+      // 기존 타이핑 메시지 제거
+      setMessages(prev => prev.filter(msg => !msg.isTyping));
+      
       // 타이핑 인디케이터 표시
       const typingMessage: Message = {
         id: `typing-complete-${Date.now()}`,
@@ -369,6 +367,9 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
   };
 
   const showAdInChat = async () => {
+    // 기존 타이핑 메시지 제거
+    setMessages(prev => prev.filter(msg => !msg.isTyping));
+    
     // 광고 시작 메시지
     const adStartMessage: Message = {
       id: `ad-start-${Date.now()}`,
@@ -394,6 +395,9 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
     
     // 3초 광고 시청 시뮬레이션
     setTimeout(async () => {
+      // 기존 타이핑 메시지 제거
+      setMessages(prev => prev.filter(msg => !msg.isTyping));
+      
       const adCompleteMessage: Message = {
         id: `ad-complete-${Date.now()}`,
         type: 'ai',
@@ -401,31 +405,79 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
         timestamp: new Date()
       };
       
-      setMessages(prev => [...prev.slice(0, -1), adCompleteMessage]);
+      setMessages(prev => [...prev, adCompleteMessage]);
       
       // 1초 후 상세 결과 페이지로 이동
       setTimeout(async () => {
-        const result = {
-          analysisId,
-          gender,
-          answers,
-          scores: calculateScores(),
-          personalityResult: await determinePersonalityType(calculateScores()),
-          completedAt: new Date().toISOString()
-        };
-        
-        // 결과를 세션에 저장
-        sessionStorage.setItem('analysisResult', JSON.stringify(result));
-        
-        // 상세 결과 페이지로 이동
-        const resultData = encodeURIComponent(JSON.stringify(result.personalityResult));
-        router.push(`/analysis/${analysisId}/premium-result?result=${resultData}`);
+        try {
+          // 답변 데이터 준비
+          const answerData = answers.map((answer, index) => ({
+            question_id: questions[index]?.id,
+            option_id: answer.optionId
+          }));
+
+          // 새로운 분석 API 호출
+          const response = await fetch('http://127.0.0.1:8000/api/v1/analyze', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+              analysis_id: analysisId,
+              gender: gender,
+              answers: answerData
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('분석 API 에러:', errorText);
+            throw new Error(`분석 중 오류가 발생했습니다: ${response.status}`);
+          }
+
+          const analysisResponse = await response.json();
+          const analysisData = analysisResponse.data;
+          
+          if (!analysisData) {
+            throw new Error('분석 결과를 가져올 수 없습니다.');
+          }
+          
+          // 결과 생성
+          const result = {
+            analysisId: analysisData.analysis_id,
+            gender: analysisData.gender,
+            answers: analysisData.answers,
+            scores: analysisData.scores,
+            personalityResult: analysisData.personality_result,
+            completedAt: analysisData.completed_at
+          };
+          
+          // onComplete 콜백 호출
+          onComplete(result);
+        } catch (error) {
+          console.error('광고 시청 후 분석 오류:', error);
+          
+          // 기존 타이핑 메시지 제거
+          setMessages(prev => prev.filter(msg => !msg.isTyping));
+          
+          // 에러 메시지 표시
+          const errorMessage: Message = {
+            id: `error-${Date.now()}`,
+            type: 'ai',
+            content: `죄송합니다. 분석 중 오류가 발생했습니다.\n\n오류: ${error instanceof Error ? error.message : String(error)}\n\n다시 시도해주세요.`,
+            timestamp: new Date()
+          };
+          
+          setMessages(prev => [...prev, errorMessage]);
+        }
       }, 1000);
     }, 3000);
   };
 
   const completeAnalysis = async () => {
-    setIsLoading(true);
+    // 기존 타이핑 메시지 제거
+    setMessages(prev => prev.filter(msg => !msg.isTyping));
     
     // 분석 완료 메시지
     const completionMessage: Message = {
@@ -438,21 +490,51 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
     setMessages(prev => [...prev, completionMessage]);
 
     try {
-      // 점수 계산
-      const scores = calculateScores();
+      // 답변 데이터 준비
+      const answerData = answers.map((answer, index) => ({
+        question_id: questions[index]?.id,
+        option_id: answer.optionId
+      }));
+
+      // 새로운 분석 API 호출
+      const response = await fetch('http://127.0.0.1:8000/api/v1/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          analysis_id: analysisId,
+          gender: gender,
+          answers: answerData
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('분석 API 에러:', errorText);
+        throw new Error(`분석 중 오류가 발생했습니다: ${response.status}`);
+      }
+
+      const analysisResponse = await response.json();
+      const analysisData = analysisResponse.data;
       
-      // 성격 유형 및 상세 결과 생성
-      const personalityResult = await determinePersonalityType(scores);
+      if (!analysisData) {
+        throw new Error('분석 결과를 가져올 수 없습니다.');
+      }
       
       // 결과 생성
       const result = {
-        analysisId,
-        gender,
-        answers,
-        scores,
-        personalityResult,
-        completedAt: new Date().toISOString()
+        analysisId: analysisData.analysis_id,
+        gender: analysisData.gender,
+        answers: analysisData.answers,
+        scores: analysisData.scores,
+        personalityResult: analysisData.personality_result,
+        completedAt: analysisData.completed_at
       };
+
+      // onComplete 콜백 호출
+      onComplete(result);
 
       // 분석 완료 메시지들 (여러 버블로 나누어 표시)
       const completionMessages: Message[] = [
@@ -465,25 +547,25 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
         {
           id: `type-${Date.now() + 1}`,
           type: 'ai',
-          content: `🎯 당신의 성향은 "${personalityResult.summary.catchphrase}"입니다!\n\n${personalityResult.type}`,
+          content: `🎯 당신의 성향은 "${analysisData.personality_result.type_title}"입니다!\n\n${analysisData.personality_result.type_description}`,
           timestamp: new Date()
         },
         {
           id: `strengths-${Date.now() + 2}`,
           type: 'ai',
-          content: `💪 주요 강점\n\n${personalityResult.strengths.slice(0, 2).map(strength => `• ${strength}`).join('\n')}`,
+          content: `💪 주요 강점\n\n${analysisData.personality_result.strengths.slice(0, 2).map((strength: string) => `• ${strength}`).join('\n')}`,
           timestamp: new Date()
         },
         {
           id: `weaknesses-${Date.now() + 3}`,
           type: 'ai',
-          content: `⚠️ 주의할 점\n\n${personalityResult.weaknesses.slice(0, 2).map(weakness => `• ${weakness}`).join('\n')}`,
+          content: `⚠️ 주의할 점\n\n${analysisData.personality_result.weaknesses.slice(0, 2).map((weakness: string) => `• ${weakness}`).join('\n')}`,
           timestamp: new Date()
         },
         {
           id: `compatibility-${Date.now() + 4}`,
           type: 'ai',
-          content: `💕 궁합\n\n• 잘 어울리는 성향: "${personalityResult.compatibility.best.catchphrase}"\n• 피해야 하는 성향: "${personalityResult.compatibility.worst.catchphrase}"`,
+          content: `💕 궁합\n\n• 잘 어울리는 성향: "${analysisData.personality_result.compatibility_best_type}"\n• 피해야 하는 성향: "${analysisData.personality_result.compatibility_worst_type}"`,
           timestamp: new Date()
         },
         {
@@ -501,6 +583,9 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
       // 메시지들을 순차적으로 추가 (타이핑 효과) - 테스트를 위해 더 빠르게
       completionMessages.forEach((message, index) => {
         setTimeout(() => {
+          // 기존 타이핑 메시지 제거
+          setMessages(prev => prev.filter(msg => !msg.isTyping));
+          
           // 타이핑 인디케이터 먼저 표시
           const typingMessage: Message = {
             id: `typing-${message.id}`,
@@ -521,16 +606,17 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
     } catch (error) {
       console.error('분석 완료 중 오류:', error);
       
+      // 기존 타이핑 메시지 제거
+      setMessages(prev => prev.filter(msg => !msg.isTyping));
+      
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         type: 'ai',
-        content: '죄송합니다. 분석 중 오류가 발생했습니다. 다시 시도해주세요.',
+        content: `죄송합니다. 분석 중 오류가 발생했습니다.\n\n오류: ${error instanceof Error ? error.message : String(error)}\n\n다시 시도해주세요.`,
         timestamp: new Date()
       };
       
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -556,92 +642,84 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
     return axisScores;
   };
 
-  const determinePersonalityType = async (scores: any): Promise<PersonalityResult> => {
+  const determinePersonalityType = async (scores: { axis1: number; axis2: number; axis3: number; axis4: number }): Promise<PersonalityResult> => {
     console.log('점수 계산 결과:', scores);
     console.log('성별:', gender);
     
-    const type1 = scores.axis1 > 0 ? '에겐' : '테토';
-    const type2 = scores.axis2 > 0 ? '액티브' : '리플렉트';
-    const type3 = scores.axis3 > 0 ? '플랜' : '플로우';
-    const type4 = scores.axis4 > 0 ? '표현' : '절제';
-    
+    // 에겐/테토 판별 (axis1)
+    const baseType = scores.axis1 > 0 ? '에겐' : '테토';
     const genderSuffix = gender === 'male' ? '남' : '녀';
-    const typeName = `${type1}${type2}${type3}${type4}${genderSuffix}`;
     
-    console.log('생성된 성격 유형:', { type1, type2, type3, type4, genderSuffix, typeName });
+    // 강도 판별 (axis2, axis3, axis4의 절댓값 합계로 판단)
+    const totalIntensity = Math.abs(scores.axis2) + Math.abs(scores.axis3) + Math.abs(scores.axis4);
+    let intensity: string;
     
-    // 16개 유형별 상세 결과 생성
-    return await generatePersonalityResult(typeName, type1, type2, type3, type4);
+    if (totalIntensity <= 2) {
+      intensity = '라이트';
+    } else if (totalIntensity <= 4) {
+      intensity = '스탠다드';
+    } else {
+      intensity = '하드코어';
+    }
+    
+    const typeName = `${baseType}${genderSuffix}-${intensity}`;
+    
+    console.log('생성된 성격 유형:', { baseType, genderSuffix, intensity, typeName, totalIntensity });
+    
+    // 12개 유형별 상세 결과 생성
+    return await generatePersonalityResult(typeName, baseType, genderSuffix, intensity);
   };
 
-  const generatePersonalityResult = async (typeName: string, type1: string, type2: string, type3: string, type4: string): Promise<PersonalityResult> => {
+  const generatePersonalityResult = async (typeName: string, baseType: string, genderSuffix: string, intensity: string): Promise<PersonalityResult> => {
     try {
-      console.log('성격 유형 생성:', { typeName, type1, type2, type3, type4, gender });
+      console.log('성격 유형 생성:', { typeName, baseType, genderSuffix, intensity, gender });
       
       // 데이터베이스에서 결과 가져오기
-      const response = await fetch(`http://127.0.0.1:8000/api/v1/personality-results/${typeName}`);
+      const url = `http://127.0.0.1:8000/api/v1/personality-results/${encodeURIComponent(typeName)}`;
+      console.log('API 요청 URL:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      });
       
       console.log('API 응답 상태:', response.status);
+      console.log('API 응답 헤더:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API 에러 응답:', errorText);
+        console.error('응답 상태:', response.status, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
       
       const result = await response.json();
       console.log('API 응답 데이터:', result);
+      console.log('반환할 데이터:', result.data);
+      
+      if (!result.data) {
+        throw new Error('API 응답에 data 필드가 없습니다.');
+      }
+      
       return result.data;
     } catch (error) {
       console.error('성격 결과 로드 실패:', error);
       console.error('요청한 typeName:', typeName);
+      console.error('오류 상세:', {
+        name: error instanceof Error ? error.name : 'Unknown Error',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       
-      // 기본값 반환 (더 상세한 내용으로)
-      return {
-        type: typeName,
-        summary: {
-          catchphrase: `🎯 ${typeName}의 독특한 매력`,
-          keywords: ['개성', '특별함', '독창성']
-        },
-        strengths: [
-          '뛰어난 개성과 매력',
-          '독창적인 사고방식',
-          '특별한 감성과 직감',
-          '유니크한 관점',
-          '창의적인 아이디어'
-        ],
-        weaknesses: [
-          '때로는 너무 독특해서 이해받기 어려움',
-          '완벽주의 경향이 있을 수 있음',
-          '감정적 기복이 있을 수 있음',
-          '새로운 환경 적응에 시간이 필요',
-          '타인의 시선을 의식하는 경향'
-        ],
-        relationships: '친구들에게는 특별하고 독특한 매력을 가진 친구로 기억되며, 연인에게는 깊이 있는 감정적 연결을 제공하는 파트너입니다. 동료들에게는 창의적이고 독창적인 아이디어로 팀에 새로운 시각을 제공합니다.',
-        workStyle: '독창적이고 창의적인 접근 방식을 선호하며, 기존의 틀에 얽매이지 않고 새로운 방법을 찾아내는 능력이 뛰어납니다. 자유로운 환경에서 최고의 성과를 내는 스타일입니다.',
-        stressResponse: '스트레스 상황에서는 혼자만의 시간을 통해 문제를 해결하려 하며, 창의적인 해결책을 찾아내려 합니다. 하지만 압박감이 극심할 때는 감정적 기복이 있을 수 있습니다.',
-        growthTips: [
-          '자신만의 독특함을 인정하고 받아들이기',
-          '타인과의 소통 방법 개선하기',
-          '감정 조절을 위한 명상이나 취미 활동',
-          '새로운 경험에 대한 개방성 기르기',
-          '자신의 가치를 믿고 자신감 갖기'
-        ],
-        compatibility: {
-          best: { type: '상호 보완적인 성향', reason: '서로의 다른 점을 인정하고 보완해주는 관계에서 가장 좋은 시너지를 낼 수 있습니다.' },
-          worst: { type: '비슷한 성향', reason: '너무 비슷한 성향끼리는 오히려 갈등이 생기거나 발전이 더뎌질 수 있습니다.' }
-        }
-      };
+      // 오류 발생 시 null 반환
+      throw error;
     }
   };
 
-  const handleBack = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
-      setAnswers(prev => prev.slice(0, -1));
-      setMessages(prev => prev.slice(0, -2)); // 사용자 답변과 AI 질문 제거
-    }
-  };
+
 
   if (isLoading && questions.length === 0) {
     return (
@@ -654,17 +732,20 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
 
   return (
     <div className="h-screen bg-gray-100">
-      <div className="max-w-[700px] mx-auto h-full flex flex-col">
+      <div className="h-full flex flex-col">
         {/* 네비게이션바 */}
-        <div className="flex-shrink-0 bg-white p-4 flex items-center">
-          <button onClick={() => window.history.back()} className="text-gray-600 hover:text-gray-800 mr-4">
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h2 className="text-lg font-semibold text-gray-900">에겐남, 테토남, 에겐녀, 테토녀 성향분석</h2>
+        <div className="flex-shrink-0 bg-white">
+          <div className="max-w-[700px] mx-auto px-4 h-16 flex items-center">
+            <button onClick={() => window.history.back()} className="text-gray-600 hover:text-gray-800 mr-4">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h2 className="text-lg font-semibold text-gray-900">에겐남, 테토남, 에겐녀, 테토녀 성향분석</h2>
+          </div>
         </div>
 
         {/* 채팅 영역 */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-[700px] mx-auto px-4 py-4 space-y-4">
           {messages.map((msg) => (
             <div
               key={msg.id}
@@ -693,14 +774,14 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
                     <button
                       onClick={() => handleAnswer(0)}
                       className="w-full text-left p-2 bg-blue-400 text-white rounded-md hover:bg-blue-600 focus:bg-blue-600 focus:outline-none transition-colors text-md"
-                      disabled={isLoading || currentQuestionIndex >= questions.length}
+                      disabled={isLoading}
                     >
                       {msg.options.option1}
                     </button>
                     <button
                       onClick={() => handleAnswer(1)}
                       className="w-full text-left p-2 bg-blue-400 text-white rounded-md hover:bg-blue-600 focus:bg-blue-600 focus:outline-none transition-colors text-md"
-                      disabled={isLoading || currentQuestionIndex >= questions.length}
+                      disabled={isLoading}
                     >
                       {msg.options.option2}
                     </button>
@@ -718,9 +799,10 @@ export default function QuestionChat({ analysisId, onComplete }: QuestionChatPro
             </div>
           )}
           <div ref={messagesEndRef} />
+          </div>
         </div>
 
       </div>
     </div>
-  );
+  ); 
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface CarouselItem {
   id: number;
@@ -74,7 +74,7 @@ const carouselItems: CarouselItem[] = [
   }
 ];
 
-export default function CarouselBanner() {
+export default function HeroBanner() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const goToSlide = (index: number) => {

@@ -46,10 +46,10 @@ export default function CommentSection({ analysisId }: CommentSectionProps) {
       );
       const data: CommentListResponse = await response.json();
       
-      setComments(data.comments);
-      setTotalCount(data.total_count);
-      setCurrentPage(data.page);
-      setTotalPages(data.total_pages);
+      setComments(data.comments || []);
+      setTotalCount(data.total_count || 0);
+      setCurrentPage(data.page || 1);
+      setTotalPages(data.total_pages || 1);
     } catch (error) {
       console.error('댓글 조회 실패:', error);
     } finally {
@@ -150,7 +150,7 @@ export default function CommentSection({ analysisId }: CommentSectionProps) {
   };
 
   return (
-    <div className="max-w-[700px] mx-auto px-6 lg:px-8 py-8">
+    <div className="w-full px-4 py-8">
       <h2 className="text-xl font-bold text-gray-900 mb-6">💬 평가 및 댓글</h2>
       
       {/* 댓글 작성 폼 */}
@@ -239,12 +239,12 @@ export default function CommentSection({ analysisId }: CommentSectionProps) {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="text-gray-500 mt-2">댓글을 불러오는 중...</p>
           </div>
-        ) : comments.length === 0 ? (
+        ) : !comments || comments.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <p>아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!</p>
           </div>
         ) : (
-          comments.map((comment) => (
+          (comments || []).map((comment) => (
             <div key={comment.id} className="py-6 border-b border-gray-100 last:border-b-0">
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-3">

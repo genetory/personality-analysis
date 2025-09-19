@@ -1,10 +1,11 @@
-import { CarouselBanner, PopularAnalysisSection } from '@/components/main/sections';
+import HeroBanner from '@/components/HeroBanner';
+import AnalysisList from '@/components/AnalysisList';
 
 export default function Home() {
   return (
     <div className="bg-white">
-      <CarouselBanner />
-      <PopularAnalysisSection />
+      <HeroBanner />
+      <AnalysisList />
     </div>
   );
 }
